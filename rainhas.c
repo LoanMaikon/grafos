@@ -1,14 +1,12 @@
 #include "rainhas.h"
 
+#include <string.h>
 
-
-void posicionarRainhas(int *t, int n, int r, int *count) {
-    int i, j, valido;
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r) {
+    unsigned int i, j, valido;
 
     if (r == n) {
-        (*count)++;
-        imprimeSolucao(t, n);
-        return;
+        return t;
     }
 
     for (j = 0; j < n; j++) {
@@ -20,11 +18,12 @@ void posicionarRainhas(int *t, int n, int r, int *count) {
 
         if (valido) {
             t[r] = j;
-            posicionarRainhas(t, n, r + 1, count);
+            if (posicionarRainhas(t, n, r + 1) != NULL)
+                return t;
         }
     }
+    return NULL;
 }
-
 
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n rainhas 
@@ -41,12 +40,7 @@ void posicionarRainhas(int *t, int n, int r, int *count) {
 // devolve r
 
 unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
-
-    n = n;
-    k = k;
-    c = c;
-
-    return r;
+    return posicionarRainhas(r, n, 0);
 }
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n
@@ -56,10 +50,5 @@ unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *
 // n, c e r são como em rainhas_bt()
 
 unsigned int *rainhas_ci(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
-
-    n = n;
-    k = k;
-    c = c;
-
     return r;
 }
