@@ -1,5 +1,31 @@
 #include "rainhas.h"
 
+
+
+void posicionarRainhas(int *t, int n, int r, int *count) {
+    int i, j, valido;
+
+    if (r == n) {
+        (*count)++;
+        imprimeSolucao(t, n);
+        return;
+    }
+
+    for (j = 0; j < n; j++) {
+        valido = 1;
+
+        for (i = 0; i < r; i++)
+            if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i)
+                valido = 0;
+
+        if (valido) {
+            t[r] = j;
+            posicionarRainhas(t, n, r + 1, count);
+        }
+    }
+}
+
+
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n rainhas 
 // com casas proibidas usando backtracking
@@ -16,11 +42,11 @@
 
 unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
 
-  n = n;
-  k = k;
-  c = c;
+    n = n;
+    k = k;
+    c = c;
 
-  return r;
+    return r;
 }
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n
@@ -31,9 +57,9 @@ unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *
 
 unsigned int *rainhas_ci(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
 
-  n = n;
-  k = k;
-  c = c;
+    n = n;
+    k = k;
+    c = c;
 
-  return r;
+    return r;
 }
