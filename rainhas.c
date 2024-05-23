@@ -2,26 +2,41 @@
 
 #include <string.h>
 
-unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r) {
-    unsigned int i, j, valido;
 
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k);
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k);
+
+
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k) {
+    for (unsigned int i = 0; i < k; i++) {
+        if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
+            return 0;
+        }
+    }
+
+    for (unsigned int i = 0; i < r; i++) {
+        if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k) {
     if (r == n) {
         return t;
     }
 
-    for (j = 0; j < n; j++) {
-        valido = 1;
-
-        for (i = 0; i < r; i++)
-            if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i)
-                valido = 0;
-
-        if (valido) {
+    for (unsigned int j = 0; j < n; j++) {
+        if (isValid(t, r, j, c, k)) {
             t[r] = j;
-            if (posicionarRainhas(t, n, r + 1) != NULL)
+            if (posicionarRainhas(t, n, r + 1, c, k) != NULL) {
                 return t;
+            }
         }
     }
+
     return NULL;
 }
 
@@ -40,7 +55,7 @@ unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r)
 // devolve r
 
 unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
-    return posicionarRainhas(r, n, 0);
+    return posicionarRainhas(r, n, 0, c, k);
 }
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n
