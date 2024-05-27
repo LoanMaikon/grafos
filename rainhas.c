@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BOARD_SLOTS (n * n) // Board size will always be n^2.
+#define BOARD_SQUARES (n * n) // Board size will always be n^2.
 #define ADD 1
 #define REM 0
 
@@ -19,14 +19,15 @@
 
 struct graph_t {
     unsigned int **adjacency;
-    unsigned int size;
+    unsigned int size; // Guarda o tamanho do tabuleiro, e não do grafo.
 };
 
 struct set_t {
-    unsigned int size;
+    unsigned int size; // Guarda a quantidade de elementos no conjunto.
     unsigned int *data;
 };
 
+// Aloca espaço para um grafo (matriz de adjacência).
 struct graph_t* create_graph(unsigned int n) {
     int i;
     struct graph_t* g;
@@ -37,12 +38,12 @@ struct graph_t* create_graph(unsigned int n) {
     }
     g->size = n;
 
-    if(! (g->adjacency = calloc(BOARD_SLOTS, sizeof(int*)))) {
+    if(! (g->adjacency = calloc(BOARD_SQUARES, sizeof(int*)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
-    for (i = 0; i < BOARD_SLOTS; i++)
-        if(! (g->adjacency[i] = calloc(BOARD_SLOTS, sizeof(int)))) {
+    for (i = 0; i < BOARD_SQUARES; i++)
+        if(! (g->adjacency[i] = calloc(BOARD_SQUARES, sizeof(int)))) {
             fprintf(stderr, "Erro ao alocar memória");
             return NULL;
         }
@@ -50,13 +51,14 @@ struct graph_t* create_graph(unsigned int n) {
     return g;
 }
 
+// Aloca espaço para um conjunto.
 struct set_t* create_set(unsigned int n) {
     struct set_t *s;
     if(! (s = malloc(sizeof(struct set_t)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
-    if(! (s->data = calloc(BOARD_SLOTS, sizeof(int)))) {
+    if(! (s->data = calloc(BOARD_SQUARES, sizeof(int)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
@@ -65,10 +67,18 @@ struct set_t* create_set(unsigned int n) {
     return s;
 }
 
+// Transforma uma coordenada do tabuleiro em índice do vetor.
 int get_index_from_position(int board_size, casa c) {
     return board_size * c.linha + c.coluna;
 }
 
+// Transforma um índice do vetor em coordenada do tabuleiro.
+void get_position_from_index(int index, int board_size, casa *c) {
+    c->linha = index / board_size;
+    c->coluna = index % board_size;
+}
+
+// Adiciona ou remove uma aresta entre duas casas.
 void update_edge(struct graph_t *graph, casa c1, casa c2, int operation) {
     int v1 = get_index_from_position(graph->size, c1);
     int v2 = get_index_from_position(graph->size, c2);
@@ -76,28 +86,25 @@ void update_edge(struct graph_t *graph, casa c1, casa c2, int operation) {
     graph->adjacency[v2][v1] = operation;
 }
 
-void get_position_from_index(int index, int board_size, casa *c) {
-    c->linha = index / board_size;
-    c->coluna = index % board_size;
-}
-
+// Imprime a matriz de adjacência.
 void print_graph(struct graph_t *g) {
     int i, j;
     int n = g->size;
 
-    for (i = 0; i < BOARD_SLOTS; i++) {
-        for(j = 0; j < BOARD_SLOTS; j++)
+    for (i = 0; i < BOARD_SQUARES; i++) {
+        for(j = 0; j < BOARD_SQUARES; j++)
             printf("%d ", g->adjacency[i][j]);
         printf("\n");
     }
 }
 
-struct set_t* append(struct set_t *s, casa v) {
-}
-
-struct set_t* remove_neighbours(struct graph_t *g, struct set_t *s, casa v) {
-    return NULL;
-}
+// Ainda não comecei a implementar a parte dos conjuntos.
+//struct set_t* append(struct set_t *s, casa v) {
+//    return NULL;
+//}
+//struct set_t* remove_neighbours(struct graph_t *g, struct set_t *s, casa v) {
+//    return NULL;
+//}
 
 
 int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k);
