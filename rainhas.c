@@ -39,7 +39,7 @@ unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
 
     for (unsigned int j = 0; j < n; j++) {
         if (isValid(t, r, j, c, k)) {
-            t[r] = j;
+            t[r] = j + 1;
             if (posicionarRainhas(t, n, r + 1, c, k) != NULL) {
                 return t;
             }
