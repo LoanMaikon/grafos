@@ -8,15 +8,61 @@
 #define ADD 1
 #define REM 0
 
-// Só para eu lembrar depois:
-//                              n - 1 da linha horizontal
-//                              n - 1 da linha vertical
-//                              n - 1 + 2*(min(i, j)) da diagonal
-//                              total: 3(n -1) + 2*(min(i, j)) para cada casa
-//                              maior valor da diagonal acontece no centro
-//                              o centro ocorre em ceil(n/2)
-//                              preciso alocar 3(n - 1) + n = 4n - 3
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k);
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k);
 
+//-------------------------- Parte backtracking -------------------------------
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k) {
+    for (unsigned int i = 0; i < k; i++) {
+        if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
+            return 0;
+        }
+    }
+
+    for (unsigned int i = 0; i < r; i++) {
+        if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k) {
+    if (r == n) {
+        return t;
+    }
+
+    for (unsigned int j = 0; j < n; j++) {
+        if (isValid(t, r, j, c, k)) {
+            t[r] = j;
+            if (posicionarRainhas(t, n, r + 1, c, k) != NULL) {
+                return t;
+            }
+        }
+    }
+
+    return NULL;
+}
+//------------------------------------------------------------------------------
+// computa uma resposta para a instância (n,c) do problema das n rainhas 
+// com casas proibidas usando backtracking
+//
+//    n é o tamanho (número de linhas/colunas) do tabuleiro
+//
+//    c é um vetor de k 'struct casa' indicando as casas proibidas
+//
+//    r é um vetor de n posições (já alocado) a ser preenchido com a resposta:
+//      r[i] = j > 0 indica que a rainha da linha i+1 fica na coluna j;
+//      r[i] = 0     indica que não há rainha nenhuma na linha i+1
+//
+// devolve r
+
+unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
+    return posicionarRainhas(r, n, 0, c, k);
+}
+
+//----------------------------- Parte grafos ----------------------------------
 struct graph_t {
     unsigned int **adjacency;
     unsigned int size; // Guarda o tamanho do tabuleiro, e não do grafo.
@@ -106,61 +152,61 @@ void print_graph(struct graph_t *g) {
 //    return NULL;
 //}
 
-
-int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k);
-unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k);
-
-
-int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k) {
-    for (unsigned int i = 0; i < k; i++) {
-        if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
-            return 0;
+// Cria as arestas entre a casa que possui uma rainha e todas as casas
+// proibidas.
+void add_queen_neighbours(struct graph_t *g, casa c) {
+    // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
+    for(int i = 0; i < g->size; i++) {
+        if (i != c.coluna) {
+            casa c_horizontal;
+            c_horizontal.linha = i;
+            c_horizontal.coluna = c.coluna;
+            update_edge(g, c, c_horizontal, ADD);
+        }
+        if (i != c.linha) {
+            casa c_vertical;
+            c_vertical.linha = c.linha;
+            c_vertical.coluna = i;
+            update_edge(g, c, c_vertical, ADD);
         }
     }
 
-    for (unsigned int i = 0; i < r; i++) {
-        if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i) {
-            return 0;
+    // Adiciona aresta entre todas as casas nas quatro diagonais.
+    int directions[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    for (int d = 0; d < 4; ++d) {
+        int d_horizontal = directions[d][0];
+        int d_vertical = directions[d][1];
+        int i = c.linha + d_horizontal;
+        int j = c.coluna + d_vertical;
+
+        while (i >= 0 && i < g->size && j >= 0 && j < g->size) {
+            casa c_diag;
+            c_diag.linha = i;
+            c_diag.coluna = j;
+            update_edge(g, c, c_diag, ADD);
+            i += d_horizontal;
+            j += d_vertical;
         }
     }
-
-    return 1;
 }
 
-unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k) {
-    if (r == n) {
-        return t;
-    }
+// Função que vai realizar todo o trabalho da parte de grafos.
+unsigned int *rainhas_ci_aux(struct graph_t *g, struct set_t *i, struct set_t *c) {
+    if(i->size == g->size)
+        return i->data;
+    else if(i->size + c->size < g->size)
+        return NULL;
 
-    for (unsigned int j = 0; j < n; j++) {
-        if (isValid(t, r, j, c, k)) {
-            t[r] = j;
-            if (posicionarRainhas(t, n, r + 1, c, k) != NULL) {
-                return t;
-            }
-        }
-    }
-
-    return NULL;
+    casa v;
+    //remover um vértice de C
+    // preciso ver como vou fazer tal decisão.
+    
+    unsigned int *r = rainhas_ci_aux(g, append(i, v), remove_neighbours(g, c, v));
+    
+    return r? r : rainhas_ci_aux(g, i, c);
 }
 
-//------------------------------------------------------------------------------
-// computa uma resposta para a instância (n,c) do problema das n rainhas 
-// com casas proibidas usando backtracking
-//
-//    n é o tamanho (número de linhas/colunas) do tabuleiro
-//
-//    c é um vetor de k 'struct casa' indicando as casas proibidas
-//
-//    r é um vetor de n posições (já alocado) a ser preenchido com a resposta:
-//      r[i] = j > 0 indica que a rainha da linha i+1 fica na coluna j;
-//      r[i] = 0     indica que não há rainha nenhuma na linha i+1
-//
-// devolve r
 
-unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
-    return posicionarRainhas(r, n, 0, c, k);
-}
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n
 // rainhas com casas proibidas usando a modelagem do problema como
