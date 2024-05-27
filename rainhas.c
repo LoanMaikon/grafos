@@ -8,11 +8,14 @@
 #define ADD 1
 #define REM 0
 
-int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k);
-unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k);
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
+            unsigned int k);
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
+                                casa *c, unsigned int k);
 
 //-------------------------- Parte backtracking -------------------------------
-int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k) {
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
+            unsigned int k) {
     for (unsigned int i = 0; i < k; i++) {
         if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
             return 0;
@@ -28,7 +31,8 @@ int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned i
     return 1;
 }
 
-unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k) {
+unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
+                                casa *c, unsigned int k) {
     if (r == n) {
         return t;
     }
@@ -45,7 +49,7 @@ unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
     return NULL;
 }
 //------------------------------------------------------------------------------
-// computa uma resposta para a instância (n,c) do problema das n rainhas 
+// computa uma resposta para a instância (n,c) do problema das n rainhas
 // com casas proibidas usando backtracking
 //
 //    n é o tamanho (número de linhas/colunas) do tabuleiro
@@ -58,7 +62,8 @@ unsigned int *posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
 //
 // devolve r
 
-unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
+unsigned int *rainhas_bt(unsigned int n, unsigned int k, casa *c,
+                         unsigned int *r) {
     return posicionarRainhas(r, n, 0, c, k);
 }
 
@@ -74,22 +79,22 @@ struct set_t {
 };
 
 // Aloca espaço para um grafo (matriz de adjacência).
-struct graph_t* create_graph(unsigned int n) {
+struct graph_t *create_graph(unsigned int n) {
     int i;
-    struct graph_t* g;
+    struct graph_t *g;
 
-    if(! (g = malloc(sizeof(struct graph_t)))) {
+    if (!(g = malloc(sizeof(struct graph_t)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
     g->size = n;
 
-    if(! (g->adjacency = calloc(BOARD_SQUARES, sizeof(int*)))) {
+    if (!(g->adjacency = calloc(BOARD_SQUARES, sizeof(int *)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
     for (i = 0; i < BOARD_SQUARES; i++)
-        if(! (g->adjacency[i] = calloc(BOARD_SQUARES, sizeof(int)))) {
+        if (!(g->adjacency[i] = calloc(BOARD_SQUARES, sizeof(int)))) {
             fprintf(stderr, "Erro ao alocar memória");
             return NULL;
         }
@@ -98,13 +103,13 @@ struct graph_t* create_graph(unsigned int n) {
 }
 
 // Aloca espaço para um conjunto.
-struct set_t* create_set(unsigned int n) {
+struct set_t *create_set(unsigned int n) {
     struct set_t *s;
-    if(! (s = malloc(sizeof(struct set_t)))) {
+    if (!(s = malloc(sizeof(struct set_t)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
-    if(! (s->data = calloc(BOARD_SQUARES, sizeof(int)))) {
+    if (!(s->data = calloc(BOARD_SQUARES, sizeof(int)))) {
         fprintf(stderr, "Erro ao alocar memória");
         return NULL;
     }
@@ -138,17 +143,17 @@ void print_graph(struct graph_t *g) {
     int n = g->size;
 
     for (i = 0; i < BOARD_SQUARES; i++) {
-        for(j = 0; j < BOARD_SQUARES; j++)
+        for (j = 0; j < BOARD_SQUARES; j++)
             printf("%d ", g->adjacency[i][j]);
         printf("\n");
     }
 }
 
 // Ainda não comecei a implementar a parte dos conjuntos.
-//struct set_t* append(struct set_t *s, casa v) {
+// struct set_t* append(struct set_t *s, casa v) {
 //    return NULL;
 //}
-//struct set_t* remove_neighbours(struct graph_t *g, struct set_t *s, casa v) {
+// struct set_t* remove_neighbours(struct graph_t *g, struct set_t *s, casa v) {
 //    return NULL;
 //}
 
@@ -156,7 +161,7 @@ void print_graph(struct graph_t *g) {
 // proibidas.
 void add_queen_neighbours(struct graph_t *g, casa c) {
     // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
-    for(int i = 0; i < g->size; i++) {
+    for (int i = 0; i < g->size; i++) {
         if (i != c.coluna) {
             casa c_horizontal;
             c_horizontal.linha = i;
@@ -173,39 +178,40 @@ void add_queen_neighbours(struct graph_t *g, casa c) {
 
     // Adiciona aresta entre todas as casas nas quatro diagonais.
     int directions[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-    for (int d = 0; d < 4; ++d) {
-        int d_horizontal = directions[d][0];
-        int d_vertical = directions[d][1];
-        int i = c.linha + d_horizontal;
-        int j = c.coluna + d_vertical;
+    for (int d = 0; d < 4; d++) {
+        int horizontal_dir = directions[d][0];
+        int vertical_dir = directions[d][1];
+        int i = c.linha + horizontal_dir;
+        int j = c.coluna + vertical_dir;
 
         while (i >= 0 && i < g->size && j >= 0 && j < g->size) {
             casa c_diag;
             c_diag.linha = i;
             c_diag.coluna = j;
             update_edge(g, c, c_diag, ADD);
-            i += d_horizontal;
-            j += d_vertical;
+            i += horizontal_dir;
+            j += vertical_dir;
         }
     }
 }
 
 // Função que vai realizar todo o trabalho da parte de grafos.
-unsigned int *rainhas_ci_aux(struct graph_t *g, struct set_t *i, struct set_t *c) {
-    if(i->size == g->size)
+unsigned int *find_independent_set(struct graph_t *g, struct set_t *i,
+                                   struct set_t *c) {
+    if (i->size == g->size)
         return i->data;
-    else if(i->size + c->size < g->size)
+    else if (i->size + c->size < g->size)
         return NULL;
 
     casa v;
-    //remover um vértice de C
-    // preciso ver como vou fazer tal decisão.
-    
-    unsigned int *r = rainhas_ci_aux(g, append(i, v), remove_neighbours(g, c, v));
-    
-    return r? r : rainhas_ci_aux(g, i, c);
-}
+    // remover um vértice de C
+    //  preciso ver como vou fazer tal decisão.
 
+    unsigned int *r =
+        find_independent_set(g, append(i, v), remove_neighbours(g, c, v));
+
+    return r ? r : find_independent_set(g, i, c);
+}
 
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n
@@ -214,6 +220,7 @@ unsigned int *rainhas_ci_aux(struct graph_t *g, struct set_t *i, struct set_t *c
 //
 // n, c e r são como em rainhas_bt()
 
-unsigned int *rainhas_ci(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
+unsigned int *rainhas_ci(unsigned int n, unsigned int k, casa *c,
+                         unsigned int *r) {
     return r;
 }
