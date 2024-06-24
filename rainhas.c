@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define BOARD_SQUARES (n * n) // Board size will always be n^2.
 #define ADD 1
