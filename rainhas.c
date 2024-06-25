@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define BOARD_SQUARES (n * n) // Board size will always be n^2.
 #define ADD 1
@@ -15,8 +16,8 @@ isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
         unsigned int k);
 
 unsigned int*
-posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
-                   casa *c, unsigned int k);
+posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
+                  unsigned int k);
 
 //-------------------------- Parte backtracking -------------------------------
 int
@@ -38,8 +39,8 @@ isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
 }
 
 unsigned int*
-posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
-                   casa *c, unsigned int k) {
+posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
+                  unsigned int k) {
     if (r == n) {
         return t;
     }
@@ -70,8 +71,7 @@ posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r,
 // devolve r
 
 unsigned int*
-rainhas_bt(unsigned int n, unsigned int k, casa *c,
-            unsigned int *r) {
+rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     return posicionarRainhas(r, n, 0, c, k);
 }
 
@@ -139,10 +139,13 @@ get_index_from_position(int board_size, casa c) {
 }
 
 // Transforma um índice do vetor em coordenada do tabuleiro.
-void
-get_position_from_index(int index, int board_size, casa *c) {
-    c->linha = index / board_size;
-    c->coluna = index % board_size;
+casa
+get_position_from_index(int index, int board_size) {
+    casa c;
+    c.linha = index / board_size;
+    c.coluna = index % board_size;
+
+    return c;
 }
 
 // Adiciona ou remove uma aresta entre duas casas.
@@ -226,20 +229,20 @@ remove_element(struct set_t *s, casa v) {
 // Essa função vai adicionar de novo os vizinhos de v depois da chamada
 // recursiva.
 struct set_t*
-add_neighbours(struct graph_t *g, struct set_t *s, casa v) {
+add_neighbours_set(struct graph_t *g, struct set_t *s, casa v) {
     return NULL;
 }
 
 // Essa função vai remover de s todos os vizinhos de v. E a casa também.
 struct set_t*
-remove_neighbours(struct graph_t *g, struct set_t *s, casa v) {
+remove_neighbours_set(struct graph_t *g, struct set_t *s, casa v) {
     return NULL;
 }
 
 // Cria as arestas entre a casa que possui uma rainha e todas as casas
 // proibidas.
 void
-add_queen_neighbours(struct graph_t *g, casa c) {
+add_neighbours_board(struct graph_t *g, casa c) {
     // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
     for (int i = 0; i < g->size; i++) {
         if (i != c.coluna) {
@@ -277,8 +280,7 @@ add_queen_neighbours(struct graph_t *g, casa c) {
 
 // Função que vai realizar todo o trabalho da parte de grafos.
 unsigned int*
-find_independent_set(struct graph_t *g, struct set_t *i,
-                                   struct set_t *c) {
+find_independent_set(struct graph_t *g, struct set_t *i, struct set_t *c) {
     if (i->elem_count == g->size)
         return i->data;
     else if (i->elem_count + c->elem_count < g->size)
@@ -288,13 +290,13 @@ find_independent_set(struct graph_t *g, struct set_t *i,
     // remover um vértice de C
     //  preciso ver como vou fazer tal decisão.
 
-    unsigned int *r =
-        find_independent_set(g, append_element(i, v), remove_neighbours(g, c, v));
+    unsigned int *r = find_independent_set(g, append_element(i, v),
+                                           remove_neighbours(g, c, v));
 
-    i = remove_element (i, v);
+    i = remove_element(i, v);
     c = add_neighbours(g, c, v);
 
-    return r? r : find_independent_set(g, i, c);
+    return r ? r : find_independent_set(g, i, c);
 }
 
 //------------------------------------------------------------------------------
@@ -305,7 +307,16 @@ find_independent_set(struct graph_t *g, struct set_t *i,
 // n, c e r são como em rainhas_bt()
 
 unsigned int*
-rainhas_ci(unsigned int n, unsigned int k, casa *c,
-                         unsigned int *r) {
+rainhas_ci(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
+    struct graph_t* board = create_graph(n);;
+    struct set_t* independent_set = create_set(n);;
+    struct set_t* candidates_set = create_set(BOARD_SQUARES);;
+
+    for(int i = 0; i < candidates_set->capacity; i++) {
+        candidates_set->data[i] = i;
+        casa vertice = get_position_from_index(i, board->size);
+        add_queen_neighbours(board, vertice);
+    }
+
     return r;
 }
