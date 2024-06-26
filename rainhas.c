@@ -47,11 +47,20 @@ void posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
         return;
     }
 
+    unsigned int cont = 0;
     for (unsigned int j = 0; j < n; j++) {
         if (isValid(t, r, j, c, k)) {
             t[r] = j + 1;
             posicionarRainhas(t, n, r + 1, c, k, bestSolution, maxRainhas);
         }
+        else {
+            cont++;
+        }
+    }
+
+    if (cont == n) {
+        t[r] = 0;
+        posicionarRainhas(t, n, r + 1, c, k, bestSolution, maxRainhas);
     }
 }
 
