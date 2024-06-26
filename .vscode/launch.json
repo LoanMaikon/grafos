@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "name": "run",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/teste",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+    },
+  ]
+}
