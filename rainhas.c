@@ -11,18 +11,8 @@
 #define TRUE 1
 #define FALSE 0
 
-int
-isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
-        unsigned int k);
-
-unsigned int*
-posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
-                  unsigned int k);
-
 //-------------------------- Parte backtracking -------------------------------
-int
-isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
-        unsigned int k) {
+int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned int k) {
     for (unsigned int i = 0; i < k; i++) {
         if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
             return FALSE;
@@ -30,7 +20,7 @@ isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
     }
 
     for (unsigned int i = 0; i < r; i++) {
-        if (t[i] == j || t[i] == j + r - i || t[i] == j - r + i) {
+        if (t[i] == j + 1 || t[i] == j + 1 + r - i || t[i] == j + 1 - r + i) {
             return FALSE;
         }
     }
@@ -38,24 +28,33 @@ isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c,
     return TRUE;
 }
 
-unsigned int*
-posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
-                  unsigned int k) {
+void posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c, unsigned int k, unsigned int *bestSolution, unsigned int *maxRainhas) {
     if (r == n) {
-        return t;
+        unsigned int count = 0;
+        for (unsigned int i = 0; i < n; i++) {
+            if (t[i] > 0) {
+                count++;
+            }
+        }
+
+        if (count > *maxRainhas) {
+            *maxRainhas = count;
+            for (unsigned int i = 0; i < n; i++) {
+                bestSolution[i] = t[i];
+            }
+        }
+
+        return;
     }
 
     for (unsigned int j = 0; j < n; j++) {
         if (isValid(t, r, j, c, k)) {
             t[r] = j + 1;
-            if (posicionarRainhas(t, n, r + 1, c, k) != NULL) {
-                return t;
-            }
+            posicionarRainhas(t, n, r + 1, c, k, bestSolution, maxRainhas);
         }
     }
-
-    return NULL;
 }
+
 //------------------------------------------------------------------------------
 // computa uma resposta para a instância (n,c) do problema das n rainhas
 // com casas proibidas usando backtracking
@@ -69,10 +68,21 @@ posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
 //      r[i] = 0     indica que não há rainha nenhuma na linha i+1
 //
 // devolve r
+unsigned int* rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
+    unsigned int maxRainhas = 0;
+    unsigned int *t = (unsigned int*) calloc(n, sizeof(unsigned int));
+    unsigned int *bestSolution = (unsigned int*) calloc(n, sizeof(unsigned int));
 
-unsigned int*
-rainhas_bt(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
-    return posicionarRainhas(r, n, 0, c, k);
+    posicionarRainhas(t, n, 0, c, k, bestSolution, &maxRainhas);
+
+    for (unsigned int i = 0; i < n; i++) {
+        r[i] = bestSolution[i];
+    }
+
+    free(t);
+    free(bestSolution);
+
+    return r;
 }
 
 //----------------------------- Parte grafos ----------------------------------
@@ -291,10 +301,10 @@ find_independent_set(struct graph_t *g, struct set_t *i, struct set_t *c) {
     //  preciso ver como vou fazer tal decisão.
 
     unsigned int *r = find_independent_set(g, append_element(i, v),
-                                           remove_neighbours(g, c, v));
+                                           remove_neighbours_set(g, c, v));
 
     i = remove_element(i, v);
-    c = add_neighbours(g, c, v);
+    c = add_neighbours_set(g, c, v);
 
     return r ? r : find_independent_set(g, i, c);
 }
@@ -315,7 +325,7 @@ rainhas_ci(unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     for(int i = 0; i < candidates_set->capacity; i++) {
         candidates_set->data[i] = i;
         casa vertice = get_position_from_index(i, board->size);
-        add_queen_neighbours(board, vertice);
+        //add_queen_neighbours(board, vertice);
     }
 
     return r;
