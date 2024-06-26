@@ -20,6 +20,9 @@ int isValid(unsigned int *t, unsigned int r, unsigned int j, casa *c, unsigned i
     }
 
     for (unsigned int i = 0; i < r; i++) {
+        if (t[i] == 0) {
+            continue;
+        }
         if (t[i] == j + 1 || t[i] == j + 1 + r - i || t[i] == j + 1 - r + i) {
             return FALSE;
         }
@@ -43,6 +46,10 @@ void posicionarRainhas(unsigned int *t, unsigned int n, unsigned int r, casa *c,
                 bestSolution[i] = t[i];
             }
         }
+
+        // if (count == n) {
+        //     return count;
+        // }
 
         return;
     }
