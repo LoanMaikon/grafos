@@ -188,15 +188,15 @@ delete_set (struct set_t *s) {
 // Transforma uma coordenada do tabuleiro em índice do vetor.
 int
 get_index_from_position (unsigned int board_size, casa c) {
-    return board_size * c.linha + c.coluna;
+    return board_size * (c.linha - 1) + (c.coluna - 1);
 }
 
 // Transforma um índice do vetor em coordenada do tabuleiro.
 casa
 get_position_from_index (unsigned int index, unsigned int board_size) {
     casa c;
-    c.linha = index / board_size;
-    c.coluna = index % board_size;
+    c.linha = (index / board_size) + 1;
+    c.coluna = (index % board_size) + 1;
 
     return c;
 }
@@ -337,20 +337,20 @@ remove_neighbours_set (struct graph_t *g, struct set_t *s, casa c) {
 // Cria as arestas entre a casa que possui uma rainha e todas as casas
 // proibidas.
 void
-add_neighbours_board (struct graph_t *g, casa c) {
+add_neighbours_board (struct graph_t *g, casa v, casa *c) {
     // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
-    for (int i = 0; i < g->size; i++) {
-        if (i != c.coluna) {
+    for (int i = 1; i <= g->size; i++) {
+        if (i != v.coluna) {
             casa c_horizontal;
             c_horizontal.linha = i;
-            c_horizontal.coluna = c.coluna;
-            update_edge (g, c, c_horizontal, ADD);
+            c_horizontal.coluna = v.coluna;
+            update_edge (g, v, c_horizontal, ADD);
         }
-        if (i != c.linha) {
+        if (i != v.linha) {
             casa c_vertical;
-            c_vertical.linha = c.linha;
+            c_vertical.linha = v.linha;
             c_vertical.coluna = i;
-            update_edge (g, c, c_vertical, ADD);
+            update_edge (g, v, c_vertical, ADD);
         }
     }
 
@@ -359,18 +359,22 @@ add_neighbours_board (struct graph_t *g, casa c) {
     for (int d = 0; d < 4; d++) {
         int horizontal_dir = directions[d][0];
         int vertical_dir = directions[d][1];
-        int i = c.linha + horizontal_dir;
-        int j = c.coluna + vertical_dir;
+        int i = v.linha + horizontal_dir;
+        int j = v.coluna + vertical_dir;
 
-        while (i >= 0 && i < g->size && j >= 0 && j < g->size) {
+        while (i > 0 && i <= g->size && j > 0 && j <= g->size) {
             casa c_diag;
             c_diag.linha = i;
             c_diag.coluna = j;
-            update_edge (g, c, c_diag, ADD);
+            update_edge (g, v, c_diag, ADD);
             i += horizontal_dir;
             j += vertical_dir;
         }
     }
+
+    // Adiciona aresta entre todas as casas proibídas
+    for (int p = 0; p < 2 * g->size; p++)
+        update_edge (g, v, c[p], ADD);
 }
 
 // Função que realiza todo o trabalho da parte de grafos.
@@ -411,19 +415,23 @@ unsigned int *
 rainhas_ci (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     struct graph_t *board = create_graph (n);
     struct set_t *independent_set = create_set (n);
+    struct set_t *maximal_set = create_set (n);
     struct set_t *candidates_set = create_set (BOARD_SQUARES);
 
     for (int i = 0; i < candidates_set->capacity; i++) {
         candidates_set->data[i] = i;
         candidates_set->elem_count++;
         casa vertice = get_position_from_index (i, board->size);
-        add_neighbours_board (board, vertice);
+        add_neighbours_board (board, vertice, c);
     }
+
+    for (int i = 0; i < 2 * n; i++)
+        remove_element (candidates_set, c[i], n);
 
     find_independent_set (board, independent_set, candidates_set);
     for (int i = 0; i < n; i++) {
         casa aux = get_position_from_index (independent_set->data[i], n);
-        r[i] = aux.coluna + 1;
+        r[i] = aux.coluna;
     }
 
     return r;
