@@ -165,14 +165,19 @@ create_set (unsigned int n) {
     return s;
 }
 
+void
+copy_set_data (struct set_t *dest, struct set_t *source) {
+    dest->elem_count = source->elem_count;
+    memcpy (dest->data, source->data, source->capacity * sizeof (unsigned int));
+}
+
 struct set_t *
 copy_set (struct set_t *original) {
     if (original == NULL)
         return NULL;
 
     struct set_t *copy = create_set (original->capacity);
-    copy->elem_count = original->elem_count;
-    memcpy (copy->data, original->data, original->capacity * sizeof (int));
+    copy_set_data (copy, original);
 
     return copy;
 }
@@ -199,15 +204,6 @@ get_position_from_index (unsigned int index, unsigned int board_size) {
     c.coluna = (index % board_size) + 1;
 
     return c;
-}
-
-void
-debug_print_set (struct set_t *s) {
-    for (int i = 0; i < s->elem_count; i++) {
-        casa casa_aux = get_position_from_index (s->data[i], 6);
-        printf ("(%d, %d) ", casa_aux.linha + 1, casa_aux.coluna + 1);
-    }
-    printf ("\n");
 }
 
 unsigned int
@@ -289,7 +285,6 @@ remove_element (struct set_t *s, casa v, unsigned int board_size) {
     } else if (s->elem_count == 0) {
         return s;
     }
-
     unsigned int square_index = get_index_from_position (board_size, v);
 
     if (!set_contains (s, square_index))
@@ -297,6 +292,8 @@ remove_element (struct set_t *s, casa v, unsigned int board_size) {
 
     for (int i = 0; i < s->elem_count; i++) {
         if (s->data[i] == square_index) {
+            casa aux = get_position_from_index (s->data[s->elem_count - 1],
+                                                board_size);
             s->data[i] = s->data[s->elem_count - 1];
             s->elem_count--;
             break;
@@ -337,7 +334,7 @@ remove_neighbours_set (struct graph_t *g, struct set_t *s, casa c) {
 // Cria as arestas entre a casa que possui uma rainha e todas as casas
 // proibidas.
 void
-add_neighbours_board (struct graph_t *g, casa v, casa *c) {
+add_neighbours_board (struct graph_t *g, casa v, struct set_t *c) {
     // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
     for (int i = 1; i <= g->size; i++) {
         if (i != v.coluna) {
@@ -373,35 +370,37 @@ add_neighbours_board (struct graph_t *g, casa v, casa *c) {
     }
 
     // Adiciona aresta entre todas as casas proibídas
-    for (int p = 0; p < 2 * g->size; p++)
-        update_edge (g, v, c[p], ADD);
+    for (int p = 0; p < c->elem_count; p++) {
+        casa prohibited = get_position_from_index(c->data[p], g->size);
+        update_edge (g, v, prohibited, ADD);
+    }
 }
 
 // Função que realiza todo o trabalho da parte de grafos.
 unsigned int *
-find_independent_set (struct graph_t *g, struct set_t *i, struct set_t *c) {
-    if (i->elem_count == g->size)
+find_independent_set (struct graph_t *g, struct set_t *i, struct set_t *c,
+                      struct set_t *m) {
+    if (m->elem_count == m->capacity)
+        return m->data;
+    if (i->elem_count > m->elem_count)
+        copy_set_data (m, i);
+    if (c->elem_count == 0)
         return i->data;
-    else if (i->elem_count + c->elem_count < g->size)
-        return NULL;
 
     casa v;
     struct set_t *c_copy = copy_set (c);
     v = next_candidate (g, c);
     c_copy = remove_element (c_copy, v, g->size);
 
-    unsigned int *r =
-        find_independent_set (g, append_element (i, v, g->size),
-                              remove_neighbours_set (g, c_copy, v));
+    find_independent_set (g, append_element (i, v, g->size),
+                          remove_neighbours_set (g, c_copy, v), m);
 
-    if (!r) {
-        delete_set (c_copy);
-        c_copy = NULL;
-        i = remove_element (i, v, g->size);
-        c = remove_element (c, v, g->size);
-    }
+    delete_set (c_copy);
+    c_copy = NULL;
+    i = remove_element (i, v, g->size);
+    c = remove_element (c, v, g->size);
 
-    return r ? r : find_independent_set (g, i, c);
+    return find_independent_set (g, i, c, m);
 }
 
 //------------------------------------------------------------------------------
@@ -417,21 +416,27 @@ rainhas_ci (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     struct set_t *independent_set = create_set (n);
     struct set_t *maximal_set = create_set (n);
     struct set_t *candidates_set = create_set (BOARD_SQUARES);
+    struct set_t *prohibited_set = create_set (k);
+    memset (r, 0, n * sizeof (unsigned int));
 
+    for (int i = 0; i < k; i++) {
+        unsigned int index = get_index_from_position(n, c[i]);
+        prohibited_set->data[i] = index;
+    }
     for (int i = 0; i < candidates_set->capacity; i++) {
         candidates_set->data[i] = i;
         candidates_set->elem_count++;
         casa vertice = get_position_from_index (i, board->size);
-        add_neighbours_board (board, vertice, c);
+        add_neighbours_board (board, vertice, prohibited_set);
     }
 
     for (int i = 0; i < 2 * n; i++)
         remove_element (candidates_set, c[i], n);
 
-    find_independent_set (board, independent_set, candidates_set);
-    for (int i = 0; i < n; i++) {
-        casa aux = get_position_from_index (independent_set->data[i], n);
-        r[i] = aux.coluna;
+    find_independent_set (board, independent_set, candidates_set, maximal_set);
+    for (int i = 0; i < maximal_set->elem_count; i++) {
+        casa aux = get_position_from_index (maximal_set->data[i], n);
+        r[aux.linha - 1] = aux.coluna;
     }
 
     return r;
