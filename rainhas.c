@@ -36,7 +36,11 @@ isValid (unsigned int *t, unsigned int r, unsigned int j, casa *c,
 void
 posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r, casa *c,
                    unsigned int k, unsigned int *bestSolution,
-                   unsigned int *maxRainhas) {
+                   unsigned int *maxRainhas, unsigned int *achou) {
+    if (*achou) {
+        return;
+    }
+
     if (r == n) {
         unsigned int count = 0;
         for (unsigned int i = 0; i < n; i++) {
@@ -52,9 +56,9 @@ posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r, casa *c,
             }
         }
 
-        // if (count == n) {
-        //     return count;
-        // }
+        if (count == n) {
+            *achou = 1;
+        }
 
         return;
     }
@@ -63,7 +67,7 @@ posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r, casa *c,
     for (unsigned int j = 0; j < n; j++) {
         if (isValid (t, r, j, c, k)) {
             t[r] = j + 1;
-            posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxRainhas);
+            posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxRainhas, achou);
         } else {
             cont++;
         }
@@ -71,7 +75,7 @@ posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r, casa *c,
 
     if (cont == n) {
         t[r] = 0;
-        posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxRainhas);
+        posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxRainhas, achou);
     }
 }
 
@@ -94,8 +98,9 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     unsigned int *t = (unsigned int *)calloc (n, sizeof (unsigned int));
     unsigned int *bestSolution =
         (unsigned int *)calloc (n, sizeof (unsigned int));
+    unsigned int achou = 0;
 
-    posicionarRainhas (t, n, 0, c, k, bestSolution, &maxRainhas);
+    posicionarRainhas (t, n, 0, c, k, bestSolution, &maxRainhas, &achou);
 
     for (unsigned int i = 0; i < n; i++) {
         r[i] = bestSolution[i];
