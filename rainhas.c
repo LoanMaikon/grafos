@@ -77,7 +77,8 @@ isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsign
     return TRUE;
 }
 
-unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector) {
+unsigned int
+isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector) {
     for (unsigned int column = 0; column < n; column++) {
         if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
             return FALSE;
@@ -87,7 +88,8 @@ unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *p
     return TRUE;
 }
 
-unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector) {
+unsigned int 
+isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector) {
     for (unsigned int line = 0; line < n; line++) {
         if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
             return FALSE;
@@ -97,7 +99,8 @@ unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned in
     return TRUE;
 }
 
-unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector) {
+unsigned int 
+calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector) {
     unsigned int prohibitedLines = 0;
     for (unsigned int line = 0; line < n; line++) {
         if (isLineProhibited(line, n, prohibitedSpotsVector)) {
@@ -195,7 +198,7 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
 
     if (invalidCount == n) {
         t[r] = 0;
-        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens, 0);
+        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens, lastColumn);
     }
 }
 
