@@ -61,11 +61,11 @@ static void testa(unsigned int *tabuleiro, unsigned int n, unsigned int tamanho,
   // fprintf(arq, "%ld\n", tempo_bt);
   printf("\nResposta certa: ");
   mostra_resposta(n, resposta, arq);
-  // fprintf(arq, "grafo: ");
-  // long int tempo_ci;
-  // CRONOMETRA(rainhas_ci(n, tamanho, proibido, resposta), tempo_ci);
+  fprintf(arq, "grafo: ");
+  long int tempo_ci;
+  CRONOMETRA(rainhas_ci(n, tamanho, proibido, resposta), tempo_ci);
   // fprintf(arq, "%ld\n", tempo_ci);
-  // mostra_resposta(n, resposta, arq);
+  mostra_resposta(n, resposta, arq);
   // fprintf(arq, "%.2f\n", (double)tempo_ci/(double)tempo_bt);
   printf("\n");
 
