@@ -55,11 +55,10 @@ static void proibe_casas(unsigned int *tabuleiro, unsigned int tamanho, casa *pr
 static void testa(unsigned int *tabuleiro, unsigned int n, unsigned int tamanho, unsigned int *resposta, FILE *arq){
   casa *proibido = malloc(tamanho*sizeof(casa));
   proibe_casas(tabuleiro, tamanho, proibido, n, arq);
-  fprintf(arq, "\nbacktracking: \n");
+  fprintf(arq, "\nbacktracking: ");
   long int tempo_bt;
   CRONOMETRA(rainhas_bt(n, tamanho, proibido, resposta), tempo_bt);
   // fprintf(arq, "%ld\n", tempo_bt);
-  printf("\nResposta certa: ");
   mostra_resposta(n, resposta, arq);
   fprintf(arq, "grafo: ");
   long int tempo_ci;
