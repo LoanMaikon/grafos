@@ -20,7 +20,8 @@ int isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, un
 void positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
                         unsigned int *bestSolution,
                         unsigned int *maxRainhas, unsigned int *foundSolution,
-                        unsigned int maxQueensPossible, unsigned int *prohibitedSpotsVector);
+                        unsigned int maxQueensPossible, unsigned int *prohibitedSpotsVector,
+                        unsigned int actualNQueens, unsigned int lastColumn);
 unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column, unsigned int *prohibitedSpotsVector);
 unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector);
 unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector);
@@ -129,27 +130,25 @@ void
 positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
                    unsigned int *bestSolution, unsigned int *maxQueens,
                    unsigned int *foundSolution, unsigned int maxQueensPossible,
-                   unsigned int *prohibitedSpotsVector) {
+                   unsigned int *prohibitedSpotsVector, unsigned int actualNQueens,
+                   unsigned int lastColumn) {
     if (*foundSolution) {
         return;
     }
 
-    if (r == n) {
-        unsigned int queensCount = 0;
-        for (unsigned int i = 0; i < n; i++) {
-            if (t[i] > 0) {
-                queensCount++;
-            }
-        }
+    if (actualNQueens + n - r < *maxQueens) {
+        return;
+    }
 
-        if (queensCount > *maxQueens) {
-            *maxQueens = queensCount;
+    if (r == n) {
+        if (actualNQueens > *maxQueens) {
+            *maxQueens = actualNQueens;
             for (unsigned int i = 0; i < n; i++) {
                 bestSolution[i] = t[i];
             }
         }
 
-        if (queensCount == maxQueensPossible) {
+        if (actualNQueens == maxQueensPossible) {
             *foundSolution = TRUE;
         }
 
@@ -157,18 +156,46 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
     }
 
     unsigned int invalidCount = 0;
-    for (unsigned int j = 0; j < n; j++) {
-        if (isValid (n, t, r, j, prohibitedSpotsVector)) {
-            t[r] = j + 1;
-            positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector);
-        } else {
+    if (lastColumn == 0) {
+        for (unsigned int j = 0; j < n; j++) {
+            if (isValid (n, t, r, j, prohibitedSpotsVector)) {
+                t[r] = j + 1;
+                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+            } else {
+                invalidCount++;
+            }
+        }
+    } else {
+        invalidCount++;
+        if (lastColumn >= 1) {
             invalidCount++;
+        }
+        if (lastColumn + 1 < n) {
+            invalidCount++;
+        }
+
+        for (unsigned int j = lastColumn + 2; j < n; j++) {
+            if (isValid (n, t, r, j, prohibitedSpotsVector)) {
+                t[r] = j + 1;
+                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+            } else {
+                invalidCount++;
+            }
+        }
+
+        for (unsigned int j = 0; j < lastColumn - 1; j++) {
+            if (isValid (n, t, r, j, prohibitedSpotsVector)) {
+                t[r] = j + 1;
+                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+            } else {
+                invalidCount++;
+            }
         }
     }
 
     if (invalidCount == n) {
         t[r] = 0;
-        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector);
+        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens, 0);
     }
 }
 
@@ -196,7 +223,7 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     unsigned int *prohibitedSpotsVector = makeProhibitedSpotsVector(n, k, c);
     unsigned int maxQueensPossible = calculateMaxQueensPossible (n, prohibitedSpotsVector);
 
-    positionateQueens (t, n, 0, bestSolution, &maxQueens, &foundSolution, maxQueensPossible, prohibitedSpotsVector);
+    positionateQueens (t, n, 0, bestSolution, &maxQueens, &foundSolution, maxQueensPossible, prohibitedSpotsVector, 0, 0);
 
     for (unsigned int i = 0; i < n; i++) {
         r[i] = bestSolution[i];
