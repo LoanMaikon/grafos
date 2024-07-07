@@ -16,16 +16,16 @@
 
 //-------------------------- Prototypes ---------------------------------------
 
-int isValid (unsigned int *t, unsigned int r, unsigned int j, casa *c,
-             unsigned int k);
-void posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r,
-                        casa *c, unsigned int k, unsigned int *bestSolution,
-                        unsigned int *maxRainhas, unsigned int *achou,
-                        unsigned int maxQueensPossible);
-unsigned int isProhibited(unsigned int line, unsigned int column, casa *prohibitedSpots, unsigned int k);
-unsigned int isLineProhibited(unsigned int line, unsigned int n, casa *prohibitedSpots, unsigned int k);
-unsigned int isColumnProhibited(unsigned int column, unsigned int n, casa *prohibitedSpots, unsigned int k);
-unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int k, casa *prohibitedSpots);
+int isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsigned int *prohibitedSpotsVector);
+void positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
+                        unsigned int *bestSolution,
+                        unsigned int *maxRainhas, unsigned int *foundSolution,
+                        unsigned int maxQueensPossible, unsigned int *prohibitedSpotsVector);
+unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column, unsigned int *prohibitedSpotsVector);
+unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector);
+unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector);
+unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector);
+unsigned int *makeProhibitedSpotsVector(unsigned int n, unsigned int k, casa *prohibitedSpots);
 struct graph_t *create_graph (unsigned int n);
 struct set_t *create_set (unsigned int n);
 void copy_set_data (struct set_t *dest, struct set_t *source);
@@ -48,19 +48,26 @@ unsigned int *find_independent_set (struct graph_t *g, struct set_t *i,
 
 
 //-------------------------- Parte backtracking -------------------------------
+
+unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column, unsigned int *prohibitedSpotsVector) {
+    if (prohibitedSpotsVector[n * line + column] == 1) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 int
-isValid (unsigned int *t, unsigned int r, unsigned int j, casa *c,
-         unsigned int k) {
-    for (unsigned int i = 0; i < k; i++) {
-        if (c[i].linha == r + 1 && c[i].coluna == j + 1) {
-            return FALSE;
-        }
+isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsigned int *prohibitedSpotsVector) {
+    if (isProhibited(n, r, j, prohibitedSpotsVector)) {
+        return FALSE;
     }
 
     for (unsigned int i = 0; i < r; i++) {
         if (t[i] == 0) {
             continue;
         }
+
         if (t[i] == j + 1 || t[i] == j + 1 + r - i || t[i] == j + 1 - r + i) {
             return FALSE;
         }
@@ -69,95 +76,100 @@ isValid (unsigned int *t, unsigned int r, unsigned int j, casa *c,
     return TRUE;
 }
 
-void
-posicionarRainhas (unsigned int *t, unsigned int n, unsigned int r, casa *c,
-                   unsigned int k, unsigned int *bestSolution,
-                   unsigned int *maxQueens, unsigned int *achou, unsigned int maxQueensPossible) {
-    if (*achou) {
-        return;
-    }
-
-    if (r == n) {
-        unsigned int count = 0;
-        for (unsigned int i = 0; i < n; i++) {
-            if (t[i] > 0) {
-                count++;
-            }
-        }
-
-        if (count > *maxQueens) {
-            *maxQueens = count;
-            for (unsigned int i = 0; i < n; i++) {
-                bestSolution[i] = t[i];
-            }
-        }
-
-        if (count == maxQueensPossible) {
-            *achou = 1;
-        }
-
-        return;
-    }
-
-    unsigned int cont = 0;
-    for (unsigned int j = 0; j < n; j++) {
-        if (isValid (t, r, j, c, k)) {
-            t[r] = j + 1;
-            posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxQueens, achou, maxQueensPossible);
-        } else {
-            cont++;
-        }
-    }
-
-    if (cont == n) {
-        t[r] = 0;
-        posicionarRainhas (t, n, r + 1, c, k, bestSolution, maxQueens, achou, maxQueensPossible);
-    }
-}
-
-unsigned int isProhibited(unsigned int line, unsigned int column, casa *prohibitedSpots, unsigned int k) {
-    for (unsigned int i = 0; i < k; i++) {
-        if (prohibitedSpots[i].linha == line + 1 && prohibitedSpots[i].coluna == column + 1) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-unsigned int isLineProhibited(unsigned int line, unsigned int n, casa *prohibitedSpots, unsigned int k) {
+unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector) {
     for (unsigned int column = 0; column < n; column++) {
-        if (!isProhibited(line, column, prohibitedSpots, k)) {
+        if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
             return FALSE;
         }
     }
+
     return TRUE;
 }
 
-unsigned int isColumnProhibited(unsigned int column, unsigned int n, casa *prohibitedSpots, unsigned int k) {
+unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector) {
     for (unsigned int line = 0; line < n; line++) {
-        if (!isProhibited(line, column, prohibitedSpots, k)) {
+        if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
             return FALSE;
         }
     }
+
     return TRUE;
 }
 
-unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int k, casa *prohibitedSpots) {
+unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector) {
     unsigned int prohibitedLines = 0;
     for (unsigned int line = 0; line < n; line++) {
-        if (isLineProhibited(line, n, prohibitedSpots, k)) {
+        if (isLineProhibited(line, n, prohibitedSpotsVector)) {
             prohibitedLines++;
         }
     }
 
     unsigned int prohibitedColumns = 0;
     for (unsigned int column = 0; column < n; column++) {
-        if (isColumnProhibited(column, n, prohibitedSpots, k)) {
+        if (isColumnProhibited(column, n, prohibitedSpotsVector)) {
             prohibitedColumns++;
         }
     }
 
     return n - max(prohibitedLines, prohibitedColumns);
+}
+
+unsigned int *makeProhibitedSpotsVector(unsigned int n, unsigned int k, casa *prohibitedSpots) {
+    unsigned int *prohibitedSpotsVector = (unsigned int *)calloc(BOARD_SQUARES, sizeof(unsigned int));
+
+    for (unsigned int i = 0; i < k; i++) {
+        unsigned int index = get_index_from_position(n, prohibitedSpots[i]);
+        prohibitedSpotsVector[index] = 1;
+    }
+
+    return prohibitedSpotsVector;
+}
+
+void
+positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
+                   unsigned int *bestSolution, unsigned int *maxQueens,
+                   unsigned int *foundSolution, unsigned int maxQueensPossible,
+                   unsigned int *prohibitedSpotsVector) {
+    if (*foundSolution) {
+        return;
+    }
+
+    if (r == n) {
+        unsigned int queensCount = 0;
+        for (unsigned int i = 0; i < n; i++) {
+            if (t[i] > 0) {
+                queensCount++;
+            }
+        }
+
+        if (queensCount > *maxQueens) {
+            *maxQueens = queensCount;
+            for (unsigned int i = 0; i < n; i++) {
+                bestSolution[i] = t[i];
+            }
+        }
+
+        if (queensCount == maxQueensPossible) {
+            *foundSolution = TRUE;
+        }
+
+        return;
+    }
+
+    unsigned int invalidCount = 0;
+    for (unsigned int j = 0; j < n; j++) {
+        if (isValid (n, t, r, j, prohibitedSpotsVector)) {
+            t[r] = j + 1;
+            positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector);
+        } else {
+            invalidCount++;
+        }
+    }
+
+    if (invalidCount == n) {
+        t[r] = 0;
+        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -179,12 +191,12 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     unsigned int *t = (unsigned int *)calloc (n, sizeof (unsigned int));
     unsigned int *bestSolution =
         (unsigned int *)calloc (n, sizeof (unsigned int));
-    unsigned int achou = 0;
+    unsigned int foundSolution = FALSE;
 
+    unsigned int *prohibitedSpotsVector = makeProhibitedSpotsVector(n, k, c);
+    unsigned int maxQueensPossible = calculateMaxQueensPossible (n, prohibitedSpotsVector);
 
-    unsigned int maxQueensPossible = calculateMaxQueensPossible(n, k, c);
-
-    posicionarRainhas (t, n, 0, c, k, bestSolution, &maxQueens, &achou, maxQueensPossible);
+    positionateQueens (t, n, 0, bestSolution, &maxQueens, &foundSolution, maxQueensPossible, prohibitedSpotsVector);
 
     for (unsigned int i = 0; i < n; i++) {
         r[i] = bestSolution[i];
@@ -192,6 +204,7 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
 
     free (t);
     free (bestSolution);
+    free (prohibitedSpotsVector);
 
     return r;
 }
