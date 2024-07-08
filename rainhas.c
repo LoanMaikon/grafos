@@ -241,7 +241,7 @@ placeQueens (unsigned int *t, unsigned int n, unsigned int r,
         t[r] = 0;
         placeQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution,
                      maxQueensPossible, prohibitedSpotsVector, actualNQueens,
-                     lastColumn);
+                     0);
     }
 }
 
