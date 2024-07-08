@@ -5,52 +5,80 @@
 #include <string.h>
 #include <time.h>
 
-#define BOARD_SQUARES (n * n) // Board size will always be n^2.
+#define TOTAL_SQUARES ((n) * (n)) // Squares amount will always be n^2
+#define MAX_NEIGHBOURS (4 * (n) - 2)
 #define ADD 1
 #define REM 0
 #define TRUE 1
 #define FALSE 0
 
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 //-------------------------- Prototypes ---------------------------------------
 
-int isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsigned int *prohibitedSpotsVector);
-void positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
-                        unsigned int *bestSolution,
-                        unsigned int *maxRainhas, unsigned int *foundSolution,
-                        unsigned int maxQueensPossible, unsigned int *prohibitedSpotsVector,
-                        unsigned int actualNQueens, unsigned int lastColumn);
-unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column, unsigned int *prohibitedSpotsVector);
-unsigned int isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector);
-unsigned int isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector);
-unsigned int calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector);
-unsigned int *makeProhibitedSpotsVector(unsigned int n, unsigned int k, casa *prohibitedSpots);
-struct graph_t *create_graph (unsigned int n);
-struct set_t *create_set (unsigned int n);
-void copy_set_data (struct set_t *dest, struct set_t *source);
-struct set_t *copy_set (struct set_t *original);
-void delete_set (struct set_t *s);
-unsigned int get_index_from_position (unsigned int board_size, casa c);
-casa get_position_from_index (unsigned int index, unsigned int board_size);
-unsigned int get_smaller_element (struct set_t *s);
-casa next_candidate (struct graph_t *graph, struct set_t *c);
-void update_edge (struct graph_t *graph, casa c1, casa c2, unsigned int operation);
-void print_graph (struct graph_t *g);
-int set_contains (struct set_t *s, unsigned int square_index);
-struct set_t *append_element (struct set_t *s, casa v, unsigned int board_size);
-struct set_t *remove_element (struct set_t *s, casa v, unsigned int board_size);
-struct set_t *add_neighbours_set (struct graph_t *g, struct set_t *s, casa c);
-struct set_t *remove_neighbours_set (struct graph_t *g, struct set_t *s, casa c);
-void add_neighbours_board (struct graph_t *g, casa v, struct set_t *c);
-unsigned int *find_independent_set (struct graph_t *g, struct set_t *i,
-                                    struct set_t *c, struct set_t *m);
-
+int
+isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j,
+         unsigned int *prohibitedSpotsVector);
+void
+placeQueens (unsigned int *t, unsigned int n, unsigned int r,
+             unsigned int *bestSolution, unsigned int *maxRainhas,
+             unsigned int *foundSolution, unsigned int maxQueensPossible,
+             unsigned int *prohibitedSpotsVector, unsigned int actualNQueens,
+             unsigned int lastColumn);
+unsigned int
+isProhibited (unsigned int n, unsigned int line, unsigned int column,
+              unsigned int *prohibitedSpotsVector);
+unsigned int
+isLineProhibited (unsigned int line, unsigned int n,
+                  unsigned int *prohibitedSpotsVector);
+unsigned int
+isColumnProhibited (unsigned int column, unsigned int n,
+                    unsigned int *prohibitedSpotsVector);
+unsigned int
+calculateMaxQueensPossible (unsigned int n,
+                            unsigned int *prohibitedSpotsVector);
+unsigned int *
+makeProhibitedSpotsVector (unsigned int n, unsigned int k,
+                           casa *prohibitedSpots);
+struct graph_t *
+create_graph (unsigned int n);
+void
+delete_graph (struct graph_t *g);
+struct set_t *
+create_set (unsigned int n);
+void
+copy_set_data (struct set_t *dest, struct set_t *source);
+struct set_t *
+copy_set (struct set_t *original);
+void
+delete_set (struct set_t *s);
+unsigned int
+get_index_from_square (casa v, unsigned int board_size);
+struct vertex_t
+get_smaller_element (struct set_t *s);
+void
+add_edge (struct graph_t *graph, struct vertex_t v1, struct vertex_t v2);
+void
+print_graph (struct graph_t *g);
+int
+set_contains (struct set_t *s, struct vertex_t v);
+struct set_t *
+append_element (struct set_t *s, struct vertex_t v);
+struct set_t *
+remove_element (struct set_t *s, struct vertex_t v);
+struct set_t *
+remove_neighbours_set (struct graph_t *g, struct set_t *s, struct vertex_t c);
+void
+add_neighbours_board (struct graph_t *g, struct vertex_t v);
+void
+find_independent_set (struct graph_t *g, struct set_t *i, struct set_t *c,
+                      struct set_t *m);
 
 //-------------------------- Parte backtracking -------------------------------
 
-unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column, unsigned int *prohibitedSpotsVector) {
+unsigned int
+isProhibited (unsigned int n, unsigned int line, unsigned int column,
+              unsigned int *prohibitedSpotsVector) {
     if (prohibitedSpotsVector[n * line + column] == 1) {
         return TRUE;
     }
@@ -59,8 +87,9 @@ unsigned int isProhibited(unsigned int n, unsigned int line, unsigned int column
 }
 
 int
-isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsigned int *prohibitedSpotsVector) {
-    if (isProhibited(n, r, j, prohibitedSpotsVector)) {
+isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j,
+         unsigned int *prohibitedSpotsVector) {
+    if (isProhibited (n, r, j, prohibitedSpotsVector)) {
         return FALSE;
     }
 
@@ -78,9 +107,10 @@ isValid (unsigned int n, unsigned int *t, unsigned int r, unsigned int j, unsign
 }
 
 unsigned int
-isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpotsVector) {
+isLineProhibited (unsigned int line, unsigned int n,
+                  unsigned int *prohibitedSpotsVector) {
     for (unsigned int column = 0; column < n; column++) {
-        if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
+        if (!isProhibited (n, line, column, prohibitedSpotsVector)) {
             return FALSE;
         }
     }
@@ -88,10 +118,11 @@ isLineProhibited(unsigned int line, unsigned int n, unsigned int *prohibitedSpot
     return TRUE;
 }
 
-unsigned int 
-isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibitedSpotsVector) {
+unsigned int
+isColumnProhibited (unsigned int column, unsigned int n,
+                    unsigned int *prohibitedSpotsVector) {
     for (unsigned int line = 0; line < n; line++) {
-        if (!isProhibited(n, line, column, prohibitedSpotsVector)) {
+        if (!isProhibited (n, line, column, prohibitedSpotsVector)) {
             return FALSE;
         }
     }
@@ -99,30 +130,34 @@ isColumnProhibited(unsigned int column, unsigned int n, unsigned int *prohibited
     return TRUE;
 }
 
-unsigned int 
-calculateMaxQueensPossible(unsigned int n, unsigned int *prohibitedSpotsVector) {
+unsigned int
+calculateMaxQueensPossible (unsigned int n,
+                            unsigned int *prohibitedSpotsVector) {
     unsigned int prohibitedLines = 0;
     for (unsigned int line = 0; line < n; line++) {
-        if (isLineProhibited(line, n, prohibitedSpotsVector)) {
+        if (isLineProhibited (line, n, prohibitedSpotsVector)) {
             prohibitedLines++;
         }
     }
 
     unsigned int prohibitedColumns = 0;
     for (unsigned int column = 0; column < n; column++) {
-        if (isColumnProhibited(column, n, prohibitedSpotsVector)) {
+        if (isColumnProhibited (column, n, prohibitedSpotsVector)) {
             prohibitedColumns++;
         }
     }
 
-    return n - max(prohibitedLines, prohibitedColumns);
+    return n - MAX (prohibitedLines, prohibitedColumns);
 }
 
-unsigned int *makeProhibitedSpotsVector(unsigned int n, unsigned int k, casa *prohibitedSpots) {
-    unsigned int *prohibitedSpotsVector = (unsigned int *)calloc(BOARD_SQUARES, sizeof(unsigned int));
+unsigned int *
+makeProhibitedSpotsVector (unsigned int n, unsigned int k,
+                           casa *prohibitedSpots) {
+    unsigned int *prohibitedSpotsVector =
+        (unsigned int *)calloc (TOTAL_SQUARES, sizeof (unsigned int));
 
     for (unsigned int i = 0; i < k; i++) {
-        unsigned int index = get_index_from_position(n, prohibitedSpots[i]);
+        unsigned int index = get_index_from_square (prohibitedSpots[i], n);
         prohibitedSpotsVector[index] = 1;
     }
 
@@ -130,11 +165,11 @@ unsigned int *makeProhibitedSpotsVector(unsigned int n, unsigned int k, casa *pr
 }
 
 void
-positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
-                   unsigned int *bestSolution, unsigned int *maxQueens,
-                   unsigned int *foundSolution, unsigned int maxQueensPossible,
-                   unsigned int *prohibitedSpotsVector, unsigned int actualNQueens,
-                   unsigned int lastColumn) {
+placeQueens (unsigned int *t, unsigned int n, unsigned int r,
+             unsigned int *bestSolution, unsigned int *maxQueens,
+             unsigned int *foundSolution, unsigned int maxQueensPossible,
+             unsigned int *prohibitedSpotsVector, unsigned int actualNQueens,
+             unsigned int lastColumn) {
     if (*foundSolution) {
         return;
     }
@@ -163,7 +198,9 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
         for (unsigned int j = 0; j < n; j++) {
             if (isValid (n, t, r, j, prohibitedSpotsVector)) {
                 t[r] = j + 1;
-                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+                placeQueens (t, n, r + 1, bestSolution, maxQueens,
+                             foundSolution, maxQueensPossible,
+                             prohibitedSpotsVector, actualNQueens + 1, j);
             } else {
                 invalidCount++;
             }
@@ -180,7 +217,9 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
         for (unsigned int j = lastColumn + 2; j < n; j++) {
             if (isValid (n, t, r, j, prohibitedSpotsVector)) {
                 t[r] = j + 1;
-                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+                placeQueens (t, n, r + 1, bestSolution, maxQueens,
+                             foundSolution, maxQueensPossible,
+                             prohibitedSpotsVector, actualNQueens + 1, j);
             } else {
                 invalidCount++;
             }
@@ -189,7 +228,9 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
         for (unsigned int j = 0; j < lastColumn - 1; j++) {
             if (isValid (n, t, r, j, prohibitedSpotsVector)) {
                 t[r] = j + 1;
-                positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens + 1, j);
+                placeQueens (t, n, r + 1, bestSolution, maxQueens,
+                             foundSolution, maxQueensPossible,
+                             prohibitedSpotsVector, actualNQueens + 1, j);
             } else {
                 invalidCount++;
             }
@@ -198,7 +239,9 @@ positionateQueens (unsigned int *t, unsigned int n, unsigned int r,
 
     if (invalidCount == n) {
         t[r] = 0;
-        positionateQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution, maxQueensPossible, prohibitedSpotsVector, actualNQueens, lastColumn);
+        placeQueens (t, n, r + 1, bestSolution, maxQueens, foundSolution,
+                     maxQueensPossible, prohibitedSpotsVector, actualNQueens,
+                     lastColumn);
     }
 }
 
@@ -223,10 +266,12 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
         (unsigned int *)calloc (n, sizeof (unsigned int));
     unsigned int foundSolution = FALSE;
 
-    unsigned int *prohibitedSpotsVector = makeProhibitedSpotsVector(n, k, c);
-    unsigned int maxQueensPossible = calculateMaxQueensPossible (n, prohibitedSpotsVector);
+    unsigned int *prohibitedSpotsVector = makeProhibitedSpotsVector (n, k, c);
+    unsigned int maxQueensPossible =
+        calculateMaxQueensPossible (n, prohibitedSpotsVector);
 
-    positionateQueens (t, n, 0, bestSolution, &maxQueens, &foundSolution, maxQueensPossible, prohibitedSpotsVector, 0, 0);
+    placeQueens (t, n, 0, bestSolution, &maxQueens, &foundSolution,
+                 maxQueensPossible, prohibitedSpotsVector, 0, 0);
 
     for (unsigned int i = 0; i < n; i++) {
         r[i] = bestSolution[i];
@@ -240,21 +285,22 @@ rainhas_bt (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
 }
 
 //----------------------------- Parte grafos ----------------------------------
-// Precisamos ver como usar a tabela hash de grafos. Talvez conversar com o
-// Marcelo sobre a implementação.
+struct vertex_t {
+    casa square;        // Guarda a posição da casa no tabuleiro
+    unsigned int index; // Guarda a posição da casa no vetor principal do grafo
+};
+
 struct graph_t {
-    unsigned int **adjacency;
+    struct vertex_t **adjacency;
     unsigned int size; // Guarda o tamanho do tabuleiro, e não do grafo.
 };
 
-// Pretendo depois mudar para uma tabela hash também. Vai acelerar as coisas!
 struct set_t {
     unsigned int elem_count; // Guarda a quantidade de elementos no conjunto.
     unsigned int capacity;   // Guarda o tamanho do conjunto
-    unsigned int *data;
+    struct vertex_t *data;
 };
 
-// Aloca espaço para um grafo (matriz de adjacência).
 struct graph_t *
 create_graph (unsigned int n) {
     unsigned int i;
@@ -266,12 +312,13 @@ create_graph (unsigned int n) {
     }
     g->size = n;
 
-    if (!(g->adjacency = calloc (BOARD_SQUARES, sizeof (int *)))) {
+    if (!(g->adjacency = calloc (TOTAL_SQUARES, sizeof (struct vertex_t *)))) {
         fprintf (stderr, "Erro ao alocar memória.\n");
         return NULL;
     }
-    for (i = 0; i < BOARD_SQUARES; i++)
-        if (!(g->adjacency[i] = calloc (BOARD_SQUARES, sizeof (int)))) {
+    for (i = 0; i < TOTAL_SQUARES; i++)
+        if (!(g->adjacency[i] =
+                  calloc (MAX_NEIGHBOURS, sizeof (struct vertex_t)))) {
             fprintf (stderr, "Erro ao alocar memória.\n");
             return NULL;
         }
@@ -279,7 +326,17 @@ create_graph (unsigned int n) {
     return g;
 }
 
-// Aloca espaço para um conjunto.
+void
+delete_graph (struct graph_t *g) {
+    if (g) {
+        unsigned int n = g->size;
+        for (unsigned int i = 0; i < TOTAL_SQUARES; i++)
+            free (g->adjacency[i]);
+        free (g->adjacency);
+        free (g);
+    }
+}
+
 struct set_t *
 create_set (unsigned int n) {
     struct set_t *s;
@@ -287,7 +344,7 @@ create_set (unsigned int n) {
         fprintf (stderr, "Erro ao alocar memória.\n");
         return NULL;
     }
-    if (!(s->data = calloc (n, sizeof (int)))) {
+    if (!(s->data = calloc (n, sizeof (struct vertex_t)))) {
         fprintf (stderr, "Erro ao alocar memória.\n");
         return NULL;
     }
@@ -300,7 +357,8 @@ create_set (unsigned int n) {
 void
 copy_set_data (struct set_t *dest, struct set_t *source) {
     dest->elem_count = source->elem_count;
-    memcpy (dest->data, source->data, source->capacity * sizeof (unsigned int));
+    memcpy (dest->data, source->data,
+            source->capacity * sizeof (struct vertex_t));
 }
 
 struct set_t *
@@ -324,73 +382,41 @@ delete_set (struct set_t *s) {
 
 // Transforma uma coordenada do tabuleiro em índice do vetor.
 unsigned int
-get_index_from_position (unsigned int board_size, casa c) {
-    return board_size * (c.linha - 1) + (c.coluna - 1);
+get_index_from_square (casa v, unsigned int board_size) {
+    return board_size * (v.linha - 1) + (v.coluna - 1);
 }
 
-// Transforma um índice do vetor em coordenada do tabuleiro.
-casa
-get_position_from_index (unsigned int index, unsigned int board_size) {
-    casa c;
-    c.linha = (index / board_size) + 1;
-    c.coluna = (index % board_size) + 1;
-
-    return c;
-}
-
-unsigned int
+struct vertex_t
 get_smaller_element (struct set_t *s) {
-    unsigned int min_element = s->capacity + 1;
+    struct vertex_t min_element;
+    min_element.index = s->capacity + 1;
     for (unsigned int i = 0; i < s->elem_count; i++) {
-        if (s->data[i] < min_element)
+        if (s->data[i].index < min_element.index)
             min_element = s->data[i];
     }
 
     return min_element;
 }
 
-casa
-next_candidate (struct graph_t *graph, struct set_t *c) {
-    casa candidate;
-    unsigned int first_element = get_smaller_element (c);
-
-    candidate = get_position_from_index (first_element, graph->size);
-    return candidate;
-}
-
 // Adiciona ou remove uma aresta entre duas casas.
 void
-update_edge (struct graph_t *graph, casa c1, casa c2, unsigned int operation) {
-    unsigned int v1 = get_index_from_position (graph->size, c1);
-    unsigned int v2 = get_index_from_position (graph->size, c2);
-    graph->adjacency[v1][v2] = operation;
-    graph->adjacency[v2][v1] = operation;
-}
-
-// Imprime a matriz de adjacência.
-void
-print_graph (struct graph_t *g) {
-    unsigned int i, j;
-    unsigned int n = g->size;
-
-    for (i = 0; i < BOARD_SQUARES; i++) {
-        for (j = 0; j < BOARD_SQUARES; j++)
-            printf ("%d ", g->adjacency[i][j]);
-        printf ("\n");
-    }
+add_edge (struct graph_t *graph, struct vertex_t v1, struct vertex_t v2) {
+    unsigned int last_position = graph->adjacency[v1.index][0].index + 1;
+    graph->adjacency[v1.index][last_position] = v2;
+    graph->adjacency[v1.index][0].index++;
 }
 
 int
-set_contains (struct set_t *s, unsigned int square_index) {
+set_contains (struct set_t *s, struct vertex_t v) {
     for (unsigned int i = 0; i < s->elem_count; i++)
-        if (s->data[i] == square_index)
+        if (s->data[i].index == v.index)
             return TRUE;
 
     return FALSE;
 }
 
 struct set_t *
-append_element (struct set_t *s, casa v, unsigned int board_size) {
+append_element (struct set_t *s, struct vertex_t v) {
     if (s == NULL) {
         fprintf (stderr, "Erro: ponteiro para conjunto não encontrado.\n");
         return NULL;
@@ -398,32 +424,26 @@ append_element (struct set_t *s, casa v, unsigned int board_size) {
         return s;
     }
 
-    unsigned int square_index = get_index_from_position (board_size, v);
-
-    if (set_contains (s, square_index))
+    if (set_contains (s, v))
         return s;
 
-    s->data[s->elem_count] = square_index;
+    s->data[s->elem_count] = v;
     s->elem_count += 1;
 
     return s;
 }
 
 struct set_t *
-remove_element (struct set_t *s, casa v, unsigned int board_size) {
+remove_element (struct set_t *s, struct vertex_t v) {
     if (s == NULL) {
         fprintf (stderr, "Erro: ponteiro para conjunto não encontrado.\n");
         return NULL;
     } else if (s->elem_count == 0) {
         return s;
     }
-    unsigned int square_index = get_index_from_position (board_size, v);
-
-    if (!set_contains (s, square_index))
-        return s;
 
     for (unsigned int i = 0; i < s->elem_count; i++) {
-        if (s->data[i] == square_index) {
+        if (s->data[i].index == v.index) {
             s->data[i] = s->data[s->elem_count - 1];
             s->elem_count--;
             break;
@@ -434,28 +454,10 @@ remove_element (struct set_t *s, casa v, unsigned int board_size) {
 }
 
 struct set_t *
-add_neighbours_set (struct graph_t *g, struct set_t *s, casa c) {
-    unsigned int n = g->size;
-    unsigned int square_index = get_index_from_position (g->size, c);
-    for (unsigned int i = 0; i < n; i++) {
-        if (g->adjacency[i][square_index] == TRUE) {
-            casa neighbour = get_position_from_index (i, g->size);
-            append_element (s, neighbour, g->size);
-        }
-    }
-
-    return s;
-}
-
-struct set_t *
-remove_neighbours_set (struct graph_t *g, struct set_t *s, casa c) {
-    unsigned int n = g->size;
-    unsigned int square_index = get_index_from_position (g->size, c);
-    for (unsigned int i = 0; i < BOARD_SQUARES; i++) {
-        if (g->adjacency[i][square_index] == TRUE) {
-            casa neighbour = get_position_from_index (i, g->size);
-            remove_element (s, neighbour, g->size);
-        }
+remove_neighbours_set (struct graph_t *g, struct set_t *s, struct vertex_t c) {
+    unsigned int neighbour_amout = g->adjacency[c.index][0].index;
+    for (unsigned int i = 1; i <= neighbour_amout; i++) {
+        remove_element (s, g->adjacency[c.index][i]);
     }
 
     return s;
@@ -464,20 +466,24 @@ remove_neighbours_set (struct graph_t *g, struct set_t *s, casa c) {
 // Cria as arestas entre a casa que possui uma rainha e todas as casas
 // proibidas.
 void
-add_neighbours_board (struct graph_t *g, casa v, struct set_t *c) {
+add_neighbours_board (struct graph_t *g, struct vertex_t v) {
     // Adiciona aresta entre todas as casas nos sentidos horizontal e vertical.
     for (unsigned int i = 1; i <= g->size; i++) {
-        if (i != v.coluna) {
-            casa c_horizontal;
-            c_horizontal.linha = i;
-            c_horizontal.coluna = v.coluna;
-            update_edge (g, v, c_horizontal, ADD);
+        if (i != v.square.linha) {
+            struct vertex_t c_vertical;
+            c_vertical.square.linha = i;
+            c_vertical.square.coluna = v.square.coluna;
+            c_vertical.index =
+                get_index_from_square (c_vertical.square, g->size);
+            add_edge (g, v, c_vertical);
         }
-        if (i != v.linha) {
-            casa c_vertical;
-            c_vertical.linha = v.linha;
-            c_vertical.coluna = i;
-            update_edge (g, v, c_vertical, ADD);
+        if (i != v.square.coluna) {
+            struct vertex_t c_horizontal;
+            c_horizontal.square.linha = v.square.linha;
+            c_horizontal.square.coluna = i;
+            c_horizontal.index =
+                get_index_from_square (c_horizontal.square, g->size);
+            add_edge (g, v, c_horizontal);
         }
     }
 
@@ -486,51 +492,49 @@ add_neighbours_board (struct graph_t *g, casa v, struct set_t *c) {
     for (int d = 0; d < 4; d++) {
         int horizontal_dir = directions[d][0];
         int vertical_dir = directions[d][1];
-        int i = v.linha + horizontal_dir;
-        int j = v.coluna + vertical_dir;
+        int i = (int)v.square.linha + horizontal_dir;
+        int j = (int)v.square.coluna + vertical_dir;
+        int board_size = (int)g->size;
 
-        while (i > 0 && i <= g->size && j > 0 && j <= g->size) {
-            casa c_diag;
-            c_diag.linha = i;
-            c_diag.coluna = j;
-            update_edge (g, v, c_diag, ADD);
+        while (i > 0 && i <= board_size && j > 0 && j <= board_size) {
+            struct vertex_t c_diag;
+            c_diag.square.linha = (unsigned int)i;
+            c_diag.square.coluna = (unsigned int)j;
+            c_diag.index = get_index_from_square (c_diag.square, g->size);
+            add_edge (g, v, c_diag);
             i += horizontal_dir;
             j += vertical_dir;
         }
     }
-
-    // Adiciona aresta entre todas as casas proibídas
-    for (unsigned int p = 0; p < c->elem_count; p++) {
-        casa prohibited = get_position_from_index(c->data[p], g->size);
-        update_edge (g, v, prohibited, ADD);
-    }
 }
 
 // Função que realiza todo o trabalho da parte de grafos.
-unsigned int *
-find_independent_set (struct graph_t *g, struct set_t *i, struct set_t *c,
-                      struct set_t *m) {
-    if (m->elem_count == m->capacity)
-        return m->data;
-    if (i->elem_count > m->elem_count)
-        copy_set_data (m, i);
-    if (c->elem_count == 0)
-        return i->data;
+void
+find_independent_set (struct graph_t *board, struct set_t *independent_set,
+                      struct set_t *candidates_set, struct set_t *maximal_set) {
+    if (maximal_set->elem_count == maximal_set->capacity)
+        return;
+    if (independent_set->elem_count > maximal_set->elem_count)
+        copy_set_data (maximal_set, independent_set);
+    if (candidates_set->elem_count == 0)
+        return;
 
-    casa v;
-    struct set_t *c_copy = copy_set (c);
-    v = next_candidate (g, c);
-    c_copy = remove_element (c_copy, v, g->size);
+    struct vertex_t candidate;
+    struct set_t *candidates_copy_set = copy_set (candidates_set);
+    candidate = get_smaller_element (candidates_set);
+    candidates_copy_set = remove_element (candidates_copy_set, candidate);
 
-    find_independent_set (g, append_element (i, v, g->size),
-                          remove_neighbours_set (g, c_copy, v), m);
+    find_independent_set (
+        board, append_element (independent_set, candidate),
+        remove_neighbours_set (board, candidates_copy_set, candidate),
+        maximal_set);
 
-    delete_set (c_copy);
-    c_copy = NULL;
-    i = remove_element (i, v, g->size);
-    c = remove_element (c, v, g->size);
+    delete_set (candidates_copy_set);
+    candidates_copy_set = NULL;
+    independent_set = remove_element (independent_set, candidate);
+    candidates_set = remove_element (candidates_set, candidate);
 
-    return find_independent_set (g, i, c, m);
+    find_independent_set (board, independent_set, candidates_set, maximal_set);
 }
 
 //------------------------------------------------------------------------------
@@ -545,29 +549,42 @@ rainhas_ci (unsigned int n, unsigned int k, casa *c, unsigned int *r) {
     struct graph_t *board = create_graph (n);
     struct set_t *independent_set = create_set (n);
     struct set_t *maximal_set = create_set (n);
-    struct set_t *candidates_set = create_set (BOARD_SQUARES);
+    struct set_t *candidates_set = create_set (TOTAL_SQUARES);
     struct set_t *prohibited_set = create_set (k);
     memset (r, 0, n * sizeof (unsigned int));
 
     for (unsigned int i = 0; i < k; i++) {
-        unsigned int index = get_index_from_position(n, c[i]);
-        prohibited_set->data[i] = index;
-    }
-    for (unsigned int i = 0; i < candidates_set->capacity; i++) {
-        candidates_set->data[i] = i;
-        candidates_set->elem_count++;
-        casa vertice = get_position_from_index (i, board->size);
-        add_neighbours_board (board, vertice, prohibited_set);
+        prohibited_set->data[i].square = c[i];
+        unsigned int index = get_index_from_square (c[i], n);
+        prohibited_set->data[i].index = index;
     }
 
-    for (unsigned int i = 0; i < 2 * n; i++)
-        remove_element (candidates_set, c[i], n);
+    for (unsigned int i = 0; i < candidates_set->capacity; i++) {
+        struct vertex_t vertice;
+        vertice.square.linha = (i / board->size) + 1;
+        vertice.square.coluna = (i % board->size) + 1;
+        vertice.index = i;
+        candidates_set->data[i] = vertice;
+        candidates_set->elem_count++;
+        add_neighbours_board (board, vertice);
+    }
+
+    for (unsigned int i = 0; i < k; i++) {
+        remove_element (candidates_set, prohibited_set->data[i]);
+    }
 
     find_independent_set (board, independent_set, candidates_set, maximal_set);
     for (unsigned int i = 0; i < maximal_set->elem_count; i++) {
-        casa aux = get_position_from_index (maximal_set->data[i], n);
-        r[aux.linha - 1] = aux.coluna;
+        unsigned int queen_line = maximal_set->data[i].square.linha - 1;
+        unsigned int queen_column = maximal_set->data[i].square.coluna;
+        r[queen_line] = queen_column;
     }
+
+    delete_set (independent_set);
+    delete_set (maximal_set);
+    delete_set (candidates_set);
+    delete_set (prohibited_set);
+    delete_graph (board);
 
     return r;
 }
